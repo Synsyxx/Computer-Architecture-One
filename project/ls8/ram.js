@@ -9,10 +9,11 @@ class RAM {
 
     /**
      * Write (store) MDR value at address MAR
+     * 
+     * @return MDR
      */
     write(MAR, MDR) {
-        // !!! IMPLEMENT ME
-        // write the value in the MDR to the address MAR
+        return this.access(MAR, MDR, true);
     }
 
     /**
@@ -21,8 +22,7 @@ class RAM {
      * @returns MDR
      */
     read(MAR) {
-        // !!! IMPLEMENT ME
-        // Read the value in address MAR and return it
+        return this.access(MAR, null, false);
     }
 }
 
