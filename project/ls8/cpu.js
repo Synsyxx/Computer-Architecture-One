@@ -10,6 +10,9 @@ const POP = 0b01001100;
 const PUSH = 0b01001101;
 const DEC = 0b01111001;
 const INC = 0b01111000;
+const CALL = 0b01001000;
+const RET = 0b00001001;
+const ADD = 0b10101000;
 
 const SP = 0x07;
 /**
@@ -68,6 +71,10 @@ class CPU {
      */
     alu(op, regA, regB) {
         switch (op) {
+            case 'ADD':
+                this.reg[regA] = this.reg[regA] + this.reg[regB];
+                break;
+
             case 'DEC':
                 this.reg[regA] = this.reg[regA] - 1;
                 break;
@@ -92,7 +99,7 @@ class CPU {
         let IR = this.ram.read(this.reg.PC);
 
         // Debugging output
-        //console.log(`${this.reg.PC}: ${IR.toString(2)}`);
+        //console.log(`${this.reg.PC}: ${IR.toString(2)} ${this.reg[0]}`);
 
         // Get the two bytes in memory _after_ the PC in case the instruction
         // needs them.
@@ -108,7 +115,7 @@ class CPU {
         };
 
         const handle_LDI = (operandA, operandB) => {
-            this.reg[operandA] = operandB;
+            this.reg[operandA] = operandB; 
         };
 
         const handle_PRN = operandA => {
@@ -151,6 +158,20 @@ class CPU {
             this.alu('INC', SP);
         };
 
+        const handle_CALL = (operandA) => {
+            const nextAdd = this.reg.PC + 2;
+            _push(nextAdd);
+            this.reg.PC = this.reg[operandA];
+        };
+
+        const handle_RET = () => {
+            this.reg.PC = _pop();
+        };
+
+        const handle_ADD = (operandA, operandB) => {
+            this.alu('ADD', operandA, operandB);
+        };
+
         const branchTable = {
             [LDI]: handle_LDI,
             [HLT]: handle_HLT,
@@ -159,7 +180,10 @@ class CPU {
             [POP]: handle_POP,
             [PUSH]: handle_PUSH,
             [DEC]: handle_DEC,
-            [INC]: handle_INC
+            [INC]: handle_INC,
+            [CALL]: handle_CALL,
+            [RET]: handle_RET,
+            [ADD]: handle_ADD
         };
 
         if (Object.keys(branchTable).includes(IR.toString())) {
@@ -173,7 +197,9 @@ class CPU {
         // instruction byte tells you how many bytes follow the instruction byte
         // for any particular instruction.
 
-        this.reg.PC += (IR >>> 6) + 1;
+        if (IR !== RET && IR !== CALL) {
+            this.reg.PC += (IR >>> 6) + 1;
+        }        
     }
 }
 
